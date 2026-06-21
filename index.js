@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
 import { GoogleGenAI } from '@google/genai';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -56,6 +58,47 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+// ====== UPDATE .ENV FILE ======
+app.post('/api/update-env', (req, res) => {
+  try {
+    const { apiKey } = req.body;
+
+    if (!apiKey || typeof apiKey !== 'string') {
+      return res.status(400).json({ error: 'Invalid API key provided' });
+    }
+
+    const envPath = path.join(__dirname, '.env');
+    const envContent = `GEMINI_API_KEY="${apiKey}"`;
+
+    // Write to .env file
+    fs.writeFileSync(envPath, envContent, 'utf8');
+
+    // Update process.env for immediate use in this session
+    process.env.GEMINI_API_KEY = apiKey;
+
+    console.log('✅ API key updated in .env');
+    
+    res.status(200).json({ 
+      message: 'API key updated successfully',
+      updated: true 
+    });
+  } catch (error) {
+    console.error('Error updating .env file:', error);
+    res.status(500).json({ error: 'Failed to update API key: ' + error.message });
+  }
+});
+
+// TEST ROUTE
+app.post('/api/test-route', (req, res) => {
+  res.status(200).json({ message: 'TEST OK' });
+});
+
 const PORT = 3000;
-app.listen(PORT, () => console.log(`Server ready on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server ready on http://localhost:${PORT}`);
+  console.log('📝 Available routes:');
+  console.log('  GET  /');
+  console.log('  POST /api/chat');
+  console.log('  POST /api/update-env');
+});
 
