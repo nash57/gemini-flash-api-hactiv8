@@ -255,11 +255,13 @@ mobileNewChatBtn.addEventListener('click', startNewChat);
 systemInstructionInput.addEventListener('input', (e) => {
   saveSystemInstruction(e.target.value);
   mobileSystemInstructionInput.value = e.target.value;
+  saveConfigToServer();
 });
 
 mobileSystemInstructionInput.addEventListener('input', (e) => {
   saveSystemInstruction(e.target.value);
   systemInstructionInput.value = e.target.value;
+  saveConfigToServer();
 });
 
 // ====== API KEY LISTENERS ======
@@ -274,7 +276,7 @@ mobileApiKeyInput.addEventListener('input', (e) => {
 });
 
 // ====== SUBMIT API KEY WITH FEEDBACK ======
-function submitApiKeyWithFeedback(submitBtn) {
+async function submitApiKeyWithFeedback(submitBtn) {
   const apiKeyValue = submitBtn.id === 'api-key-submit' ? apiKeyInput.value : mobileApiKeyInput.value;
   
   if (!apiKeyValue || apiKeyValue.trim().length === 0) {
@@ -282,20 +284,39 @@ function submitApiKeyWithFeedback(submitBtn) {
     return;
   }
 
-  // Save API key
-  saveApiKey(apiKeyValue);
-  
-  // Show visual feedback
-  const originalText = submitBtn.textContent;
-  submitBtn.textContent = '✓ Saved!';
-  submitBtn.classList.add('bg-green-600');
-  submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-  
-  setTimeout(() => {
-    submitBtn.textContent = originalText;
-    submitBtn.classList.remove('bg-green-600');
-    submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-  }, 2000);
+  try {
+    // Send API key to backend to update .env
+    const response = await fetch('/api/update-env', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiKey: apiKeyValue })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert('⚠️ Failed to update API key on server: ' + data.error);
+      return;
+    }
+
+    // Save API key locally
+    saveApiKey(apiKeyValue);
+    
+    // Show visual feedback
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = '✓ Saved!';
+    submitBtn.classList.add('bg-green-600');
+    submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+    
+    setTimeout(() => {
+      submitBtn.textContent = originalText;
+      submitBtn.classList.remove('bg-green-600');
+      submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    }, 2000);
+  } catch (error) {
+    console.error('Error updating API key:', error);
+    alert('❌ Error updating API key: ' + error.message);
+  }
 }
 
 apiKeySubmitBtn.addEventListener('click', () => {
@@ -327,41 +348,72 @@ mobileExportHistoryBtn.addEventListener('click', () => {
   link.click();
 });
 
+// ====== SAVE CONFIGURATION TO SERVER ======
+async function saveConfigToServer() {
+  try {
+    const response = await fetch('/api/save-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        temperature: parseFloat(temperatureInput.value),
+        topP: parseFloat(topPInput.value),
+        topK: parseInt(topKInput.value),
+        systemInstruction: systemInstructionInput.value
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Failed to save config:', error.error);
+    } else {
+      console.log('✅ Configuration saved to server');
+    }
+  } catch (error) {
+    console.error('Error saving config:', error.message);
+  }
+}
+
 // ====== UPDATE SLIDER VALUES ======
 temperatureInput.addEventListener('input', (e) => {
   tempValue.textContent = e.target.value;
   mobileTemperatureInput.value = e.target.value;
   mobileTempValue.textContent = e.target.value;
+  saveConfigToServer();
 });
 
 topPInput.addEventListener('input', (e) => {
   toppValue.textContent = e.target.value;
   mobileTopPInput.value = e.target.value;
   mobileToppValue.textContent = e.target.value;
+  saveConfigToServer();
 });
 
 topKInput.addEventListener('input', (e) => {
   topkValue.textContent = e.target.value;
   mobileTopKInput.value = e.target.value;
   mobileTopkValue.textContent = e.target.value;
+  saveConfigToServer();
 });
 
 mobileTemperatureInput.addEventListener('input', (e) => {
   mobileTempValue.textContent = e.target.value;
   temperatureInput.value = e.target.value;
   tempValue.textContent = e.target.value;
+  saveConfigToServer();
 });
 
 mobileTopPInput.addEventListener('input', (e) => {
   mobileToppValue.textContent = e.target.value;
   topPInput.value = e.target.value;
   toppValue.textContent = e.target.value;
+  saveConfigToServer();
 });
 
 mobileTopKInput.addEventListener('input', (e) => {
   mobileTopkValue.textContent = e.target.value;
   topKInput.value = e.target.value;
   topkValue.textContent = e.target.value;
+  saveConfigToServer();
 });
 
 // ====== FORM SUBMISSION ======
