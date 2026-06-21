@@ -93,36 +93,28 @@ app.post('/api/save-config', (req, res) => {
   try {
     const { temperature, topP, topK, systemInstruction } = req.body;
 
-    // Validate inputs
-    if (typeof temperature !== 'number' || temperature < 0 || temperature > 2) {
-      return res.status(400).json({ error: 'Temperature must be between 0 and 2' });
-    }
-    if (typeof topP !== 'number' || topP < 0 || topP > 1) {
-      return res.status(400).json({ error: 'Top P must be between 0 and 1' });
-    }
-    if (typeof topK !== 'number' || topK < 1 || topK > 100) {
-      return res.status(400).json({ error: 'Top K must be between 1 and 100' });
-    }
-    if (typeof systemInstruction !== 'string') {
-      return res.status(400).json({ error: 'System Instruction must be a string' });
+    // Validate input
+    if (temperature === undefined || topP === undefined || topK === undefined || !systemInstruction) {
+      return res.status(400).json({ error: 'Missing required configuration fields' });
     }
 
     const configPath = path.join(__dirname, 'config.json');
-    const configData = {
-      temperature,
-      topP,
-      topK,
-      systemInstruction,
-      updatedAt: new Date().toISOString()
+    const configContent = {
+      temperature: parseFloat(temperature),
+      topP: parseFloat(topP),
+      topK: parseInt(topK),
+      systemInstruction: String(systemInstruction)
     };
 
     // Write to config.json file
-    fs.writeFileSync(configPath, JSON.stringify(configData, null, 2), 'utf8');
-    console.log('✅ Configuration saved:', configData);
+    fs.writeFileSync(configPath, JSON.stringify(configContent, null, 2), 'utf8');
 
-    res.status(200).json({
+    console.log('✅ Configuration saved:', configContent);
+    
+    res.status(200).json({ 
       message: 'Configuration saved successfully',
-      config: configData
+      saved: true,
+      config: configContent
     });
   } catch (error) {
     console.error('Error saving configuration:', error);
@@ -134,18 +126,22 @@ app.post('/api/save-config', (req, res) => {
 app.get('/api/get-config', (req, res) => {
   try {
     const configPath = path.join(__dirname, 'config.json');
-    if (fs.existsSync(configPath)) {
-      const configData = fs.readFileSync(configPath, 'utf8');
-      res.status(200).json(JSON.parse(configData));
-    } else {
-      // Return default config if file doesn't exist
-      res.status(200).json({
+    
+    // Return default config if file doesn't exist
+    if (!fs.existsSync(configPath)) {
+      const defaultConfig = {
         temperature: 0.9,
         topP: 0.9,
         topK: 40,
-        systemInstruction: 'Jawab hanya menggunakan bahasa Indonesia.'
-      });
+        systemInstruction: "Jawab hanya menggunakan bahasa Indonesia gaul."
+      };
+      return res.status(200).json(defaultConfig);
     }
+
+    const configContent = fs.readFileSync(configPath, 'utf8');
+    const config = JSON.parse(configContent);
+    
+    res.status(200).json(config);
   } catch (error) {
     console.error('Error reading configuration:', error);
     res.status(500).json({ error: 'Failed to read configuration: ' + error.message });

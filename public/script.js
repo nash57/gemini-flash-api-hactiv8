@@ -149,6 +149,67 @@ function loadApiKey() {
   updateApiStatus();
 }
 
+// ====== LOAD CONFIGURATION FROM SERVER ======
+async function loadConfigurationFromServer() {
+  try {
+    const response = await fetch('/api/get-config');
+    const config = await response.json();
+
+    // Update sliders
+    temperatureInput.value = config.temperature;
+    topPInput.value = config.topP;
+    topKInput.value = config.topK;
+    systemInstructionInput.value = config.systemInstruction;
+
+    // Update mobile sliders
+    mobileTemperatureInput.value = config.temperature;
+    mobileTopPInput.value = config.topP;
+    mobileTopKInput.value = config.topK;
+    mobileSystemInstructionInput.value = config.systemInstruction;
+
+    // Update display values
+    tempValue.textContent = config.temperature;
+    toppValue.textContent = config.topP;
+    topkValue.textContent = config.topK;
+    mobileTempValue.textContent = config.temperature;
+    mobileToppValue.textContent = config.topP;
+    mobileTopkValue.textContent = config.topK;
+
+    // Update local state
+    systemInstruction = config.systemInstruction;
+  } catch (error) {
+    console.error('Error loading configuration:', error);
+  }
+}
+
+// ====== SAVE CONFIGURATION TO SERVER ======
+async function saveConfigurationToServer() {
+  try {
+    const config = {
+      temperature: parseFloat(temperatureInput.value),
+      topP: parseFloat(topPInput.value),
+      topK: parseInt(topKInput.value),
+      systemInstruction: systemInstructionInput.value
+    };
+
+    const response = await fetch('/api/save-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config)
+    });
+
+    if (!response.ok) {
+      console.error('Failed to save configuration');
+      return;
+    }
+
+    const data = await response.json();
+    console.log('✅ Configuration saved to server:', data.config);
+  } catch (error) {
+    console.error('Error saving configuration:', error);
+  }
+}
+
 // ====== SAVE SYSTEM INSTRUCTION ======
 function saveSystemInstruction(text) {
   systemInstruction = text;
@@ -255,13 +316,13 @@ mobileNewChatBtn.addEventListener('click', startNewChat);
 systemInstructionInput.addEventListener('input', (e) => {
   saveSystemInstruction(e.target.value);
   mobileSystemInstructionInput.value = e.target.value;
-  saveConfigToServer();
+  saveConfigurationToServer(); // Auto-save to server
 });
 
 mobileSystemInstructionInput.addEventListener('input', (e) => {
   saveSystemInstruction(e.target.value);
   systemInstructionInput.value = e.target.value;
-  saveConfigToServer();
+  saveConfigurationToServer(); // Auto-save to server
 });
 
 // ====== API KEY LISTENERS ======
@@ -348,72 +409,47 @@ mobileExportHistoryBtn.addEventListener('click', () => {
   link.click();
 });
 
-// ====== SAVE CONFIGURATION TO SERVER ======
-async function saveConfigToServer() {
-  try {
-    const response = await fetch('/api/save-config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        temperature: parseFloat(temperatureInput.value),
-        topP: parseFloat(topPInput.value),
-        topK: parseInt(topKInput.value),
-        systemInstruction: systemInstructionInput.value
-      })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('Failed to save config:', error.error);
-    } else {
-      console.log('✅ Configuration saved to server');
-    }
-  } catch (error) {
-    console.error('Error saving config:', error.message);
-  }
-}
-
 // ====== UPDATE SLIDER VALUES ======
 temperatureInput.addEventListener('input', (e) => {
   tempValue.textContent = e.target.value;
   mobileTemperatureInput.value = e.target.value;
   mobileTempValue.textContent = e.target.value;
-  saveConfigToServer();
+  saveConfigurationToServer(); // Auto-save to server
 });
 
 topPInput.addEventListener('input', (e) => {
   toppValue.textContent = e.target.value;
   mobileTopPInput.value = e.target.value;
   mobileToppValue.textContent = e.target.value;
-  saveConfigToServer();
+  saveConfigurationToServer(); // Auto-save to server
 });
 
 topKInput.addEventListener('input', (e) => {
   topkValue.textContent = e.target.value;
   mobileTopKInput.value = e.target.value;
   mobileTopkValue.textContent = e.target.value;
-  saveConfigToServer();
+  saveConfigurationToServer(); // Auto-save to server
 });
 
 mobileTemperatureInput.addEventListener('input', (e) => {
   mobileTempValue.textContent = e.target.value;
   temperatureInput.value = e.target.value;
   tempValue.textContent = e.target.value;
-  saveConfigToServer();
+  saveConfigurationToServer(); // Auto-save to server
 });
 
 mobileTopPInput.addEventListener('input', (e) => {
   mobileToppValue.textContent = e.target.value;
   topPInput.value = e.target.value;
   toppValue.textContent = e.target.value;
-  saveConfigToServer();
+  saveConfigurationToServer(); // Auto-save to server
 });
 
 mobileTopKInput.addEventListener('input', (e) => {
   mobileTopkValue.textContent = e.target.value;
   topKInput.value = e.target.value;
   topkValue.textContent = e.target.value;
-  saveConfigToServer();
+  saveConfigurationToServer(); // Auto-save to server
 });
 
 // ====== FORM SUBMISSION ======
@@ -499,5 +535,6 @@ window.addEventListener('DOMContentLoaded', () => {
   loadHistory();
   loadSystemInstruction();
   loadApiKey();
+  loadConfigurationFromServer(); // Load saved configuration from server
 });
 
