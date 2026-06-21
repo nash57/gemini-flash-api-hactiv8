@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gemini AI Chatbot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+  <div class="container mx-auto px-4 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- Side Panel (Toggle) -->
+      <div id="side-panel" class="lg:col-span-1 bg-white rounded-lg shadow-lg p-6 h-fit sticky top-6 hidden lg:block">
+        <div id="tab-buttons" class="flex gap-2 mb-4 border-b border-gray-200">
+          <button id="settings-tab" class="tab-button active px-4 py-2 text-sm font-semibold text-blue-600 border-b-2 border-blue-600">
+            ⚙️ Settings
+          </button>
+          <button id="history-tab" class="tab-button px-4 py-2 text-sm font-semibold text-gray-600 border-b-2 border-transparent hover:text-blue-600">
+            📋 History
+          </button>
+        </div>
+
+        <!-- Settings Tab Content -->
+        <div id="settings-content" class="tab-content block space-y-4">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-semibold text-gray-700">Gemini API Key</label>
+              <span id="api-status" class="text-xs px-2 py-1 rounded bg-red-100 text-red-700 font-semibold">❌ Not Set</span>
+            </div>
+            <input type="password" id="api-key" placeholder="Enter your Gemini API key" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-xs" />
+            <p class="text-xs text-gray-500 mt-1">🔒 Stored locally only</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">System Instruction</label>
+            <textarea id="system-instruction" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-xs h-20 resize-none">Jawab hanya menggunakan bahasa Indonesia.</textarea>
+          </div>
+
+          <button id="new-chat" class="btn-primary w-full">
+            ✨ New Chat
+          </button>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Temperature</label>
+            <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.9" class="w-full">
+            <span id="temp-value" class="text-xs text-gray-600">0.9</span>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Top P</label>
+            <input type="range" id="top-p" min="0" max="1" step="0.1" value="0.9" class="w-full">
+            <span id="topp-value" class="text-xs text-gray-600">0.9</span>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Top K</label>
+            <input type="range" id="top-k" min="1" max="100" step="1" value="40" class="w-full">
+            <span id="topk-value" class="text-xs text-gray-600">40</span>
+          </div>
+
+          <button id="clear-history" class="btn-secondary w-full">
+            🗑️ Clear History
+          </button>
+
+          <button id="export-history" class="btn-secondary w-full">
+            💾 Export Chat
+          </button>
+        </div>
+
+        <!-- History Tab Content -->
+        <div id="history-content" class="tab-content hidden">
+          <div id="history-list" class="space-y-2 max-h-64 overflow-y-auto">
+            <p class="text-xs text-gray-500">No history yet</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Toggle Button -->
+      <div class="lg:hidden fixed bottom-6 right-6 z-50">
+        <button id="mobile-toggle-btn" class="btn-primary rounded-full w-12 h-12 flex items-center justify-center shadow-lg">
+          ⚙️
+        </button>
+      </div>
+
+      <!-- Mobile Side Panel -->
+      <div id="mobile-panel" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden">
+        <div class="absolute right-0 top-0 h-full w-64 bg-white overflow-y-auto p-6 shadow-lg">
+          <button id="close-mobile-panel" class="absolute top-4 right-4 text-2xl">✕</button>
+          
+          <div id="mobile-tab-buttons" class="flex gap-2 mb-4 border-b border-gray-200">
+            <button class="mobile-tab-button active px-4 py-2 text-sm font-semibold text-blue-600 border-b-2 border-blue-600" data-tab="settings">
+              ⚙️ Settings
+            </button>
+            <button class="mobile-tab-button px-4 py-2 text-sm font-semibold text-gray-600 border-b-2 border-transparent hover:text-blue-600" data-tab="history">
+              📋 History
+            </button>
+          </div>
+
+          <!-- Mobile Settings Tab -->
+          <div id="mobile-settings-content" class="mobile-tab-content block space-y-4">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-semibold text-gray-700">Gemini API Key</label>
+                <span id="mobile-api-status" class="text-xs px-2 py-1 rounded bg-red-100 text-red-700 font-semibold">❌ Not Set</span>
+              </div>
+              <input type="password" id="mobile-api-key" placeholder="Enter your Gemini API key" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-xs" />
+              <p class="text-xs text-gray-500 mt-1">🔒 Stored locally only</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">System Instruction</label>
+              <textarea id="mobile-system-instruction" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-xs h-20 resize-none">Jawab hanya menggunakan bahasa Indonesia.</textarea>
+            </div>
+
+            <button id="mobile-new-chat" class="btn-primary w-full">
+              ✨ New Chat
+            </button>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Temperature</label>
+              <input type="range" id="mobile-temperature" min="0" max="2" step="0.1" value="0.9" class="w-full">
+              <span id="mobile-temp-value" class="text-xs text-gray-600">0.9</span>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Top P</label>
+              <input type="range" id="mobile-top-p" min="0" max="1" step="0.1" value="0.9" class="w-full">
+              <span id="mobile-topp-value" class="text-xs text-gray-600">0.9</span>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Top K</label>
+              <input type="range" id="mobile-top-k" min="1" max="100" step="1" value="40" class="w-full">
+              <span id="mobile-topk-value" class="text-xs text-gray-600">40</span>
+            </div>
+
+            <button id="mobile-clear-history" class="btn-secondary w-full">
+              🗑️ Clear History
+            </button>
+
+            <button id="mobile-export-history" class="btn-secondary w-full">
+              💾 Export Chat
+            </button>
+          </div>
+
+          <!-- Mobile History Tab -->
+          <div id="mobile-history-content" class="mobile-tab-content hidden">
+            <div id="mobile-history-list" class="space-y-2">
+              <p class="text-xs text-gray-500">No history yet</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Panel -->
+      <div class="lg:col-span-3 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col h-screen lg:h-auto lg:min-h-screen">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6">
+          <h1 class="text-3xl font-bold">✨ Gemini AI Chatbot</h1>
+          <p class="text-blue-100 text-sm mt-1">Powered by Google Gemini Flash</p>
+        </div>
+
+        <!-- Chat Box -->
+        <div id="chat-box" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
+          <div class="text-center text-gray-500 text-sm">
+            <p>👋 Start a conversation with AI</p>
+          </div>
+        </div>
+
+        <!-- Input Form -->
+        <div class="border-t border-gray-200 p-6 bg-white">
+          <form id="chat-form" class="flex gap-2 items-end">
+            <textarea 
+              id="user-input" 
+              placeholder="Type your message..." 
+              autocomplete="off" 
+              class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition resize-none max-h-32 min-h-12 leading-relaxed"
+              required
+              rows="1"
+            ></textarea>
+            <button 
+              type="submit" 
+              class="btn-primary px-6 py-3 h-12 flex-shrink-0"
+            >
+              📤 Send
+            </button>
+          </form>
+          <p id="loading" class="text-sm text-gray-500 mt-2 hidden">⏳ AI is thinking...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
