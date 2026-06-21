@@ -14,6 +14,7 @@ const historyContent = document.getElementById('history-content');
 const newChatBtn = document.getElementById('new-chat');
 const systemInstructionInput = document.getElementById('system-instruction');
 const apiKeyInput = document.getElementById('api-key');
+const apiKeySubmitBtn = document.getElementById('api-key-submit');
 
 // Mobile elements
 const mobileToggleBtn = document.getElementById('mobile-toggle-btn');
@@ -27,6 +28,7 @@ const mobileHistoryList = document.getElementById('mobile-history-list');
 const mobileNewChatBtn = document.getElementById('mobile-new-chat');
 const mobileSystemInstructionInput = document.getElementById('mobile-system-instruction');
 const mobileApiKeyInput = document.getElementById('mobile-api-key');
+const mobileApiKeySubmitBtn = document.getElementById('mobile-api-key-submit');
 const apiStatus = document.getElementById('api-status');
 const mobileApiStatus = document.getElementById('mobile-api-status');
 
@@ -269,6 +271,39 @@ apiKeyInput.addEventListener('input', (e) => {
 mobileApiKeyInput.addEventListener('input', (e) => {
   saveApiKey(e.target.value);
   apiKeyInput.value = e.target.value;
+});
+
+// ====== SUBMIT API KEY WITH FEEDBACK ======
+function submitApiKeyWithFeedback(submitBtn) {
+  const apiKeyValue = submitBtn.id === 'api-key-submit' ? apiKeyInput.value : mobileApiKeyInput.value;
+  
+  if (!apiKeyValue || apiKeyValue.trim().length === 0) {
+    alert('⚠️ Please enter an API key');
+    return;
+  }
+
+  // Save API key
+  saveApiKey(apiKeyValue);
+  
+  // Show visual feedback
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = '✓ Saved!';
+  submitBtn.classList.add('bg-green-600');
+  submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+  
+  setTimeout(() => {
+    submitBtn.textContent = originalText;
+    submitBtn.classList.remove('bg-green-600');
+    submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+  }, 2000);
+}
+
+apiKeySubmitBtn.addEventListener('click', () => {
+  submitApiKeyWithFeedback(apiKeySubmitBtn);
+});
+
+mobileApiKeySubmitBtn.addEventListener('click', () => {
+  submitApiKeyWithFeedback(mobileApiKeySubmitBtn);
 });
 
 // ====== EXPORT HISTORY ======
